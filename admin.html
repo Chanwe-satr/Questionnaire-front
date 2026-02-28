@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>家长线索查询</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;background:#f5f7fb;padding:16px}
+    .wrap{max-width:1000px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.08);padding:16px}
+    h2{margin:6px 0 14px;text-align:center}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    input{padding:10px;border:1px solid #d1d5db;border-radius:8px;min-width:180px}
+    button{padding:10px 14px;border:none;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:14px}
+    thead th{position:sticky;top:0;background:#fafafa}
+    .scroll{overflow:auto;max-height:70vh}
+    .empty{color:#6b7280;text-align:center;padding:16px}
+    @media(max-width:640px){th,td{font-size:12px;padding:8px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>家长线索查询</h2>
+    <div class="toolbar">
+      <input id="kw" placeholder="搜索：姓名/手机号/推荐老师" />
+      <button id="reload">刷新</button>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>孩子姓名</th>
+            <th>年龄</th>
+            <th>年级</th>
+            <th>家长手机号</th>
+            <th>推荐人</th>
+            <th>推荐老师</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none">暂无数据</div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = `http://117.72.44.108:8000/api/leads`;
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
+    const kw = document.getElementById('kw');
+    const reload = document.getElementById('reload');
+
+    let cache = [];
+
+    function render(list){
+      tbody.innerHTML = '';
+      if(!list.length){ empty.style.display='block'; return; }
+      empty.style.display='none';
+      const frag = document.createDocumentFragment();
+      list.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.time||''}</td>
+          <td>${r.child_name||''}</td>
+          <td>${r.child_age||''}</td>
+          <td>${r.grade||''}</td>
+          <td>${r.parent_phone||''}</td>
+          <td>${r.referrer||''}</td>
+          <td>${r.ref_teacher||''}</td>`;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }
+
+    async function load(){
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      cache = data || [];
+      render(cache);
+    }
+
+    kw.addEventListener('input', ()=>{
+      const v = kw.value.trim().toLowerCase();
+      if(!v) return render(cache);
+      const f = cache.filter(r=>{
+        return (r.child_name||'').toLowerCase().includes(v)
+          || (r.parent_phone||'').toLowerCase().includes(v)
+          || (r.ref_teacher||'').toLowerCase().includes(v);
+      });
+      render(f);
+    });
+
+    reload.addEventListener('click', load);
+
+    load();
+  </script>
+</body>
+</html>
