@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>课程咨询登记</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; padding:0; }
+    .container { max-width:520px; margin:40px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    h2 { text-align:center; margin-bottom:20px; }
+    label { display:block; margin-top:12px; font-weight:bold; }
+    input, select { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; }
+    button { width:100%; padding:12px; margin-top:20px; background:#2563eb; color:white; border:none; border-radius:6px; font-size:16px; cursor:pointer; }
+    button:hover { background:#1d4ed8; }
+    .success { color:green; text-align:center; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>课程咨询登记</h2>
+    <form id="leadForm">
+      <label>孩子姓名</label>
+      <input type="text" name="child_name" required />
+
+      <label>孩子年龄</label>
+      <input type="number" name="child_age" required />
+
+      <label>年级</label>
+      <input type="text" name="grade" placeholder="如：三年级" required />
+
+      <label>家长手机号</label>
+      <input type="tel" name="parent_phone" required />
+
+      <label>推荐人</label>
+      <input type="text" name="referrer" placeholder="家长或学生姓名" />
+
+      <label>推荐老师</label>
+      <input type="text" name="ref_teacher" placeholder="老师姓名" />
+
+      <button type="submit">提交信息</button>
+    </form>
+    <div class="success" id="msg"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('leadForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          msg.textContent = '提交成功，我们会尽快联系您！';
+          form.reset();
+        } else {
+          msg.textContent = '提交失败，请稍后再试';
+        }
+      } catch (err) {
+        msg.textContent = '网络错误，请稍后再试';
+      }
+    });
+  </script>
+</body>
+</html>
